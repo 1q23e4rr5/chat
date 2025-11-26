@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}ادمین: کاربران{% endblock %}
+{% block content %}
+<h2>فهرست کاربران</h2>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Username</th><th>Email</th><th>Code</th><th>Admin</th><th>Active</th><th>Joined</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.code }}</td>
+        <td>{{ 'Yes' if u.is_admin else 'No' }}</td>
+        <td>{{ 'Yes' if u.is_active else 'No' }}</td>
+        <td>{{ u.joined_at }}</td>
+        <td>
+          <a href="{{ url_for('admin.users_edit', user_id=u.id) }}">Edit</a>
+          <form style="display:inline" method="post" action="{{ url_for('admin.users_deactivate', user_id=u.id) }}">
+            <button class="btn" type="submit">Deactivate</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

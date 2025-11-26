@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ room.title }}{% endblock %}
+{% block content %}
+<h2>{{ room.title }}</h2>
+<div id="messages">
+  {% for m in history %}
+    <div><strong>{{ m.user.username }}:</strong> {{ m.content }} <small>{{ m.created_at }}</small></div>
+  {% endfor %}
+</div>
+<form id="chat-form">
+  <input id="chat-input" type="text" placeholder="پیام..." autocomplete="off" />
+  <button class="btn" type="submit">ارسال</button>
+</form>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  const socket = io();
+  const roomSlug = "{{ room.slug }}";
+  socket.emit('join', { room: roomSlug });
+
+  socket.on('message', (data) => {
+    const el = document.createElement('div');
+    el.innerHTML = `<strong>${data.user}:</strong> ${data.msg} <small>${data.ts}</small>`;
+    document.getElementById('messages').appendChild(el);
+    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  });
+
+  socket.on('status', (data) => {
+    const el = document.createElement('div');
+    el.innerHTML = `<em>${data.msg}</em>`;
+    document.getElementById('messages').appendChild(el);
+  });
+
+  document.getElementById('chat-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (msg.length) {
+      socket.emit('message', { room: roomSlug, msg });
+      input.value = '';
+    }
+  });
+
+  window.addEventListener('beforeunload', () => socket.emit('leave', { room: roomSlug }));
+</script>
+{% endblock %}

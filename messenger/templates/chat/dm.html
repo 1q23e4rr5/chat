@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}چت با {{ friend.username }}{% endblock %}
+{% block content %}
+<h2>چت با {{ friend.username }} (کد: {{ friend.code }})</h2>
+
+<div id="messages">
+  {% for m in history %}
+    {% if m.sender_id == current_user.id %}
+      <div><strong>شما:</strong> {{ m.content }} <small>{{ m.created_at }}</small></div>
+    {% else %}
+      <div><strong>{{ friend.username }}:</strong> {{ m.content }} <small>{{ m.created_at }}</small></div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<form id="chat-form">
+  <input id="chat-input" type="text" placeholder="پیام..." autocomplete="off" />
+  <button class="btn" type="submit">ارسال</button>
+</form>
+
+<!-- داده‌های DM به صورت JSON امن؛ ویراستار JS خطا نمی‌دهد -->
+<script id="dm-data" type="application/json">
+{{ {
+  'friendId': friend.id,
+  'friendCode': friend.code,
+  'friendName': friend.username,
+  'roomId': dm_room
+}|tojson }}
+</script>
+
+<script>
+  const socket = io();
+
+  // خواندن داده‌ها از بلوک JSON
+  let ctx = {};
+  try {
+    ctx = JSON.parse(document.getElementById('dm-data').textContent || '{}');
+  } catch (e) {
+    console.error('Invalid DM JSON', e);
+  }
+
+  const friendId   = ctx.friendId ?? null;
+  const friendCode = ctx.friendCode ?? null;
+  const friendName = ctx.friendName ?? 'دوست';
+  const roomId     = ctx.roomId ?? null;
+
+  // عضویت در اتاق DM مشترک
+  if (friendId !== null) {
+    socket.emit('dm_join', { friend_id: friendId });
+  } else {
+    console.error('Missing friendId for DM join');
+  }
+
+  // دریافت پیام‌ها
+  socket.on('dm', (data) => {
+    const box = document.getElementById('messages');
+    const el = document.createElement('div');
+    const who = (data.from_code === friendCode) ? friendName : "شما";
+    el.innerHTML = `<strong>${who}:</strong> ${data.msg} <small>${data.ts}</small>`;
+    box.appendChild(el);
+    box.scrollTop = box.scrollHeight;
+  });
+
+  // ارسال پیام
+  document.getElementById('chat-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const msg = (input.value || '').trim();
+    if (!msg.length || friendCode === null) return;
+    socket.emit('dm', { to: friendCode, msg });
+    input.value = '';
+  });
+
+  // ترک اتاق هنگام خروج
+  window.addEventListener('beforeunload', () => {
+    if (friendId !== null) socket.emit('dm_leave', { friend_id: friendId });
+  });
+</script>
+{% endblock %}

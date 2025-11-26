@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}ورود{% endblock %}
+{% block content %}
+<h2>ورود</h2>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div>
+    <label>کد یا نام کاربری</label><br>
+    {{ form.code_or_username(size=32) }}
+  </div>
+  <div>
+    <label>رمز عبور</label><br>
+    {{ form.password(size=32) }}
+  </div>
+  <div>
+    {{ form.submit(class="btn") }}
+  </div>
+</form>
+{% endblock %}

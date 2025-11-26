@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}ثبت‌نام{% endblock %}
+{% block content %}
+<h2>ثبت‌نام</h2>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div>
+    <label>نام کاربری</label><br>
+    {{ form.username(size=32) }}
+  </div>
+  <div>
+    <label>ایمیل</label><br>
+    {{ form.email(size=32) }}
+  </div>
+  <div>
+    <label>رمز عبور</label><br>
+    {{ form.password(size=32) }}
+  </div>
+  <div>
+    {{ form.submit(class="btn") }}
+  </div>
+</form>
+{% endblock %}
